@@ -5,3 +5,4 @@ ReadBlobImagesApp/bin/
 ReadBlobImagesApp/obj/
 ReadBlobImagesApp/ReadBlobImagesApp.csproj.user
 ReadBlobImagesApp/Properties/PublishProfiles/PozeAlbum - Zip Deploy.pubxml.user
+ReadBlobImagesApp/appsettings.Development.json
