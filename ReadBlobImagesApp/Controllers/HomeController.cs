@@ -46,6 +46,77 @@ namespace ReadBlobImagesApp.Controllers
             _blobServiceClient = new BlobServiceClient(_connectionString);
         }
 
+        #region IActionResult
+        public IActionResult Index()
+        {
+            var containerItems = _blobServiceClient.GetBlobContainers(BlobContainerTraits.Metadata)
+                                                        .Where(b => b.Properties.PublicAccess.HasValue
+                                                                && b.Properties.PublicAccess != PublicAccessType.None);
+
+            List<HomeIndexResponseModel> contents = new List<HomeIndexResponseModel>();
+
+            foreach (var containerItem in containerItems)
+            {
+                BlobContainerClient blobContainerClient = new BlobContainerClient(_connectionString, containerItem.Name);
+
+                var urls = GetImageUrls(blobContainerClient);
+
+                var content = new HomeIndexResponseModel
+                {
+                    ContainerName = containerItem.Name,
+                    Urls = urls,
+                };
+                contents.Add(content);
+            }
+
+            return View(contents);
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        public IActionResult CreateZip(string containerName)
+        {
+            var containerItem = _blobServiceClient
+                                    .GetBlobContainers(BlobContainerTraits.Metadata)
+                                    .First(b => b.Name == containerName);
+
+            BlobContainerClient contianner = new BlobContainerClient(_connectionString, containerItem.Name);
+
+            var list = contianner.GetBlobs();
+            var zipName = $"{containerItem.Name}.zip";
+
+            using (MemoryStream fs = new MemoryStream())
+            {
+                using (ZipOutputStream zipOutputStream = new ZipOutputStream(fs))
+                {
+                    foreach (var blob2 in list)
+                    {
+                        zipOutputStream.SetLevel(0);
+                        BlobClient blockBlob2 = contianner.GetBlobClient(blob2.Name);
+
+                        var entry = new ZipEntry(blob2.Name);
+                        zipOutputStream.PutNextEntry(entry);
+                        blockBlob2.DownloadTo(zipOutputStream);
+                    }
+
+                    zipOutputStream.Finish();
+                    zipOutputStream.Close();
+
+                    return File(fs.ToArray(), "application/zip", zipName);
+                }
+            }
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+        #endregion
+
         private void ReadConfigKeys()
         {
             _subscriptionId = _configuration.GetValue<string>("ConfigKeys:SubscriptionId");
@@ -179,77 +250,5 @@ namespace ReadBlobImagesApp.Controllers
 
             return blobClient.Uri.ToString();
         }
-
-        #region IActionResult
-        public IActionResult Index()
-        {
-            var containerItems = _blobServiceClient.GetBlobContainers(BlobContainerTraits.Metadata)
-                                                        .Where(b => b.Properties.PublicAccess.HasValue
-                                                                && b.Properties.PublicAccess != PublicAccessType.None);
-
-            List<HomeIndexResponseModel> contents = new List<HomeIndexResponseModel>();
-
-            foreach (var containerItem in containerItems)
-            {
-                BlobContainerClient blobContainerClient = new BlobContainerClient(_connectionString, containerItem.Name);
-
-                var urls = GetImageUrls(blobContainerClient);
-
-                var content = new HomeIndexResponseModel
-                {
-                    ContainerName = containerItem.Name,
-                    Urls = urls,
-                };
-                contents.Add(content);
-            }
-
-            return View(contents);
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        public IActionResult CreateZip(string containerName)
-        {
-            var containerItem = _blobServiceClient
-                                    .GetBlobContainers(BlobContainerTraits.Metadata)
-                                    .First(b => b.Name == containerName);
-
-            BlobContainerClient contianner = new BlobContainerClient(_connectionString, containerItem.Name);
-
-            var list = contianner.GetBlobs();
-            var zipName = $"{containerItem.Name}.zip";
-
-            using (MemoryStream fs = new MemoryStream())
-            {
-                using (ZipOutputStream zipOutputStream = new ZipOutputStream(fs))
-                {
-                    foreach (var blob2 in list)
-                    {
-                        zipOutputStream.SetLevel(0);
-                        BlobClient blockBlob2 = contianner.GetBlobClient(blob2.Name);
-
-                        var entry = new ZipEntry(blob2.Name);
-                        zipOutputStream.PutNextEntry(entry);
-                        blockBlob2.DownloadTo(zipOutputStream);
-                    }
-
-                    zipOutputStream.Finish();
-                    zipOutputStream.Close();
-
-                    return File(fs.ToArray(), "application/zip", zipName);
-                }
-            }
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-
-        #endregion
     }
 }

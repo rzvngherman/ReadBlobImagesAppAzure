@@ -19,24 +19,18 @@ namespace FileUploadFunction
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req, ILogger log)
         {
             string Connection = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-            //string containerName = Environment.GetEnvironmentVariable("ContainerName");
             string containerName = req.Form["ContainerName"][0];
 
-            Stream myBlob = new MemoryStream();
             var file = req.Form.Files["File"];
 
-            string fileName;
             if (file is null)
             {
-                //throw new NullReferenceException(nameof(file));
-                fileName = req.Form["File"][0];
+                throw new NullReferenceException(nameof(file));
             }
-            else
-            {
-                fileName = file.FileName;
-            }
+             
+            var fileName = file.FileName;
 
-            myBlob = file.OpenReadStream();
+            var myBlob = file.OpenReadStream();
             var blobClient = new BlobContainerClient(Connection, containerName);
 
             //await blobClient.UploadBlobAsync("folder1/folder2/" + file.FileName, myBlob);
