@@ -26,10 +26,27 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
-                </div>
-                <a href="/.auth/login/aad/callback">Login</a>
-                |
-                <a href="/.auth/logout">Log out</a>
+                </div>            
+                
+                <ul class="navbar-nav">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item">
+                            <span class="navbar-text text-dark">Hello @User.Identity.Name!</span>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/.auth/logout">Log out</a>
+                            <a class="nav-link text-dark" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignOut">Sign out</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a href="/.auth/login/aad/callback">Login</a>
+                            <a class="nav-link text-dark" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn">Sign in</a>
+                        </li>
+                    }
+                </ul>
             </div>
         </nav>
     </header>
