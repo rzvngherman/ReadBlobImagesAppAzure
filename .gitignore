@@ -3,3 +3,5 @@ FileUploadFunction/bin/
 FileUploadFunction/obj/
 ReadBlobImagesApp/bin/
 ReadBlobImagesApp/obj/
+ReadBlobImagesApp/ReadBlobImagesApp.csproj.user
+ReadBlobImagesApp/Properties/PublishProfiles/PozeAlbum - Zip Deploy.pubxml.user
