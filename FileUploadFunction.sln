@@ -5,6 +5,8 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReadBlobImagesApp", "ReadBlobImagesApp\ReadBlobImagesApp.csproj", "{52087DF9-EEF0-4B35-88FF-0A3BB7F77E74}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileUploadFunction", "FileUploadFunction\FileUploadFunction.csproj", "{B6EBD70D-C3BE-4B8F-94D3-CA7BE57FD79E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{52087DF9-EEF0-4B35-88FF-0A3BB7F77E74}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52087DF9-EEF0-4B35-88FF-0A3BB7F77E74}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52087DF9-EEF0-4B35-88FF-0A3BB7F77E74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6EBD70D-C3BE-4B8F-94D3-CA7BE57FD79E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6EBD70D-C3BE-4B8F-94D3-CA7BE57FD79E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6EBD70D-C3BE-4B8F-94D3-CA7BE57FD79E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6EBD70D-C3BE-4B8F-94D3-CA7BE57FD79E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
