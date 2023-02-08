@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using System.IO;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web;
 
@@ -21,31 +24,54 @@ namespace ReadBlobImagesApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadFile(IFormFile file, string containerName)
+        public async Task<IActionResult> UploadFile(List<IFormFile> postedFiles, string containerName)
         {
-            var client = GetClient();
-
-            if (file.Length <= 0)
+            if(postedFiles == null)
             {
-                return BadRequest();
+                throw new ArgumentNullException(nameof(postedFiles));
             }
 
-            using (var memoryStream = new MemoryStream())
+            var client = GetClient();
+
+            using (var multipartFormContent = new MultipartFormDataContent())
             {
-                //Get the file steam from the multiform data uploaded from the browser
-                await file.CopyToAsync(memoryStream);
+                //Add other fields
+                multipartFormContent.Add(new StringContent(containerName), "ContainerName");
 
-                //Build an multipart / form - data request to upload the file to Web API
-                using var form = new MultipartFormDataContent();
-                using var fileContent = new ByteArrayContent(memoryStream.ToArray());
-                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
-                
-                form.Add(fileContent, "File", file.FileName);
-                form.Add(new StringContent(containerName), "ContainerName");
+                //Add files
+                foreach (var postedFile in postedFiles)
+                {
+                    //add file 01
+                    using var memoryStream3 = new MemoryStream();
+                    await postedFile.CopyToAsync(memoryStream3);
+                    //Add the file
+                    var fileStreamContent3 = new ByteArrayContent(memoryStream3.ToArray());
+                    //fileStreamContent3.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+                    fileStreamContent3.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+                    multipartFormContent.Add(fileStreamContent3, name: "file", fileName: postedFile.FileName);
+                }
 
-                var response = await client.PostAsync(_uploadUrl, form);
-                var responseContent = await response.Content.ReadAsStringAsync();
-                return Ok(responseContent);
+                ////add file 01
+                //using var memoryStream2 = new MemoryStream();
+                //await postedFiles.First().CopyToAsync(memoryStream2);
+                ////Add the file
+                //var fileStreamContent2 = new ByteArrayContent(memoryStream2.ToArray());
+                //fileStreamContent2.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+                //multipartFormContent.Add(fileStreamContent2, name: "file", fileName: "house2.png");
+
+                ////add file 02
+                //using var memoryStream = new MemoryStream();
+                //await postedFiles.First().CopyToAsync(memoryStream);
+                ////Add the file
+                //var fileStreamContent = new ByteArrayContent(memoryStream.ToArray());
+                //fileStreamContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+                //multipartFormContent.Add(fileStreamContent, name: "file", fileName: "house.png");
+                ////end 2
+
+                //Send it
+                var response = await client.PostAsync(_uploadUrl, multipartFormContent);
+                var responseContent2 = await response.Content.ReadAsStringAsync();
+                return Ok(responseContent2);
             }
         }
 

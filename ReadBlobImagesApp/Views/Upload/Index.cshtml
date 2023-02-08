@@ -2,11 +2,12 @@
     ViewData["Title"] = "Upload";
 }
 
-<h2>UploadFile</h2>
+<h2>Upload Files</h2>
+
 @using (Html.BeginForm("UploadFile", "Upload", FormMethod.Post, new { enctype = "multipart/form-data" }))
 {
         <div>
-        @Html.TextBox("file", "", new {  type= "file"})
+        <input type="file" name="postedFiles" multiple />
         <br />Container name @Html.TextBox("containerName", "")
         <br />
         <input type="submit" value="Upload" />

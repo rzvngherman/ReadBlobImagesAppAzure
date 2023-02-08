@@ -18,33 +18,46 @@ namespace FileUploadFunction
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req, ILogger log)
         {
+            //upload multiple files
+            if (req.ContentLength == 0)
+            {
+                string badResponseMessage = $"Request has no content";
+                return new BadRequestObjectResult(badResponseMessage);
+            }
+
             string Connection = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+
             string containerName = req.Form["ContainerName"][0];
 
-            var file = req.Form.Files["File"];
-
-            if (file is null)
-            {
-                throw new NullReferenceException(nameof(file));
-            }
-             
-            var fileName = file.FileName;
-
-            var myBlob = file.OpenReadStream();
             var blobClient = new BlobContainerClient(Connection, containerName);
 
-            //await blobClient.UploadBlobAsync("folder1/folder2/" + file.FileName, myBlob);
+            if (req.Form.Files.Count == 0)
+            {
+                string badResponseMessage = $"No files on request";
+                return new BadRequestObjectResult(badResponseMessage);
+            }
 
-            var blob = blobClient.GetBlobClient(fileName);
+            //if (req.ContentType.Contains("multipart/form-data") && req.Form.Files.Count > 0)
             try
             {
-                await blob.UploadAsync(myBlob);
-                return new OkObjectResult("file uploaded successfylly");
+                foreach (var file in req.Form.Files)
+                {
+                    var fileName = file.FileName;
+
+                    var myBlob = file.OpenReadStream();
+
+                    //await blobClient.UploadBlobAsync("folder1/folder2/" + file.FileName, myBlob);
+
+                    var blob = blobClient.GetBlobClient(fileName);
+                    await blob.UploadAsync(myBlob);
+                }
             }
             catch (Exception ex)
             {
                 return new OkObjectResult(ex.ToString());
             }
+
+            return new OkObjectResult("file(s) uploaded successfylly");
         }
     }
 }
