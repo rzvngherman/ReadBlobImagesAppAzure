@@ -49,9 +49,10 @@ namespace ReadBlobImagesApp.Controllers
         #region IActionResult
         public IActionResult Index()
         {
-            var containerItems = _blobServiceClient.GetBlobContainers(BlobContainerTraits.Metadata)
-                                                        .Where(b => b.Properties.PublicAccess.HasValue
-                                                                && b.Properties.PublicAccess != PublicAccessType.None);
+            var h = new[] { "azure-webjobs-hosts", "azure-webjobs-secrets" };
+            var containerItems = _blobServiceClient
+                                    .GetBlobContainers()
+                                    .Where(b => !h.Contains(b.Name));
 
             List<HomeIndexResponseModel> contents = new List<HomeIndexResponseModel>();
 
