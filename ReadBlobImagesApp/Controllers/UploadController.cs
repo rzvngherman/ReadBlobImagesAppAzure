@@ -13,7 +13,7 @@ namespace ReadBlobImagesApp.Controllers
     {
         private readonly string _uploadUrl;
 
-        public UploadController(ILogger<HomeController> logger, IConfiguration configuration)
+        public UploadController(ILogger<UploadController> logger, IConfiguration configuration)
         {
             _uploadUrl = configuration.GetValue<string>("ConfigKeys:UploadFileUrl");
         }
@@ -46,29 +46,10 @@ namespace ReadBlobImagesApp.Controllers
                     await postedFile.CopyToAsync(memoryStream3);
                     //Add the file
                     var fileStreamContent3 = new ByteArrayContent(memoryStream3.ToArray());
-                    //fileStreamContent3.Headers.ContentType = new MediaTypeHeaderValue("image/png");
                     fileStreamContent3.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
                     multipartFormContent.Add(fileStreamContent3, name: "file", fileName: postedFile.FileName);
                 }
 
-                ////add file 01
-                //using var memoryStream2 = new MemoryStream();
-                //await postedFiles.First().CopyToAsync(memoryStream2);
-                ////Add the file
-                //var fileStreamContent2 = new ByteArrayContent(memoryStream2.ToArray());
-                //fileStreamContent2.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-                //multipartFormContent.Add(fileStreamContent2, name: "file", fileName: "house2.png");
-
-                ////add file 02
-                //using var memoryStream = new MemoryStream();
-                //await postedFiles.First().CopyToAsync(memoryStream);
-                ////Add the file
-                //var fileStreamContent = new ByteArrayContent(memoryStream.ToArray());
-                //fileStreamContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-                //multipartFormContent.Add(fileStreamContent, name: "file", fileName: "house.png");
-                ////end 2
-
-                //Send it
                 var response = await client.PostAsync(_uploadUrl, multipartFormContent);
                 var responseContent2 = await response.Content.ReadAsStringAsync();
                 return Ok(responseContent2);
