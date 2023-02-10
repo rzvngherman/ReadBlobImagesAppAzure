@@ -9,6 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileUploadFunction", "FileU
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B76AB47A-3F58-4767-B9BD-7EB2682D3320}"
 	ProjectSection(SolutionItems) = preProject
+		deploy-steps.txt = deploy-steps.txt
 		README.md = README.md
 	EndProjectSection
 EndProject

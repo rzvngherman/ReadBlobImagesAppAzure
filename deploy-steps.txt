@@ -1,0 +1,40 @@
+API:	https://pozealbum-api.azurewebsites.net/
+WEBSITE:https://pozealbum-ui.azurewebsites.net/
+
+
+
+STEPS to deploy projects:
+	1) publish Function: from Visual Studio
+		-> create publish profile: create Azure Function app (Windows)
+			--> name 'myapi'
+		-> new resource group 'FunctionAppRG'
+		-> test with PostMan: '/api/FileUpload'
+		
+	2) public MVC aspnet core: from Visual Studio
+		-> create publish profile: Azure App Service (Linux)
+			--> name 'mywebsite'
+		-> new resource group 'PhotoUiAppSrvRG'
+		-> test URL: error: An exception was thrown. Page: Home. Error: Value cannot be null. (Parameter '_subscriptionId')
+	
+	3) create new app registrations
+		https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal
+		(??? https://learn.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app#register-an-application)
+		
+		name 'raz-reg-auth'
+		a) /Authentication / web / redirect url 'https://.../.auth/login/aad/callback'
+		b) Certificates & secrets
+		
+	4) subscriptions / IAM / add role assignment / to 'raz-reg-auth'
+	
+	5) add config keys to App Service 'pozealbum'
+		-> DONE
+		
+	6) DONE - disable anonymous access
+		https://learn.microsoft.com/en-us/azure/app-service/tutorial-auth-aad?pivots=platform-windows#configure-auth
+		a) app services 'pozealbum-UI' / authentication / microsoft identity provider 'mic-identity-prov'
+		b) app services / 'pozealbum-UI' | authentication -> Edit identity provider -> add permission -> My APIs
+	
+	7) TODO - can't see images on lister ...
+			DONE: "To create a simple SAS with any optional parameters, use the convenience overload of GenerateSas which only requires taking in permissions and the expiry time:"
+			https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/storage/Azure.Storage.Blobs/AzureStorageNetMigrationV12.md
+	

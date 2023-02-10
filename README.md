@@ -39,3 +39,7 @@ https://stackoverflow.com/questions/6601715/how-to-declare-a-local-variable-in-r
 https://stackoverflow.com/questions/16106196/concatenating-strings-in-razor
 https://www.aspsnippets.com/Articles/Create-ZIP-File-in-ASPNet-MVC.aspx
 https://learn.microsoft.com/en-us/azure/active-directory/develop/scenario-web-app-sign-user-sign-in?tabs=aspnet
+
+
+- To create a simple SAS with any optional parameters, use the convenience overload of GenerateSas which only requires taking in permissions and the expiry time:
+https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/storage/Azure.Storage.Blobs/AzureStorageNetMigrationV12.md
