@@ -9,6 +9,12 @@
     .modal-dialog {
         max-width: 90% !important;
     }
+
+    .img-link
+    {
+        cursor: pointer;
+    }
+
 </style>
 
 <div class="text-center">
@@ -34,19 +40,19 @@ foreach (var responseModel in Model)
                     {
                         idx += 1;
                         <div class="col">
-                            <img src="@url" width="100%" data-bs-toggle="modal" data-bs-target="@("#image" + @idy + @idx)" />
+                            <img class="img-link" src="@url" width="100%" data-bs-toggle="modal" data-bs-target="@("#image" + @idy + @idx)" />
                         </div>
 
                         <!-- modal-->
                         <div class="modal fade" id="@("image" + @idy + @idx)" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <img src="@url"/>
-            </div>
-        </div>
-    </div>
-        }
-    }
+                                <div class="modal-content">
+                                    <img src="@url"/>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
     </div>
 </div>
     }
