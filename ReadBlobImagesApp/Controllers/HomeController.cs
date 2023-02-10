@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
@@ -246,6 +247,20 @@ namespace ReadBlobImagesApp.Controllers
             BlobClient blobClient = blobContainerClient.GetBlobClient(blobName);
 
             MemoryStream memoryStream = new MemoryStream();
+
+            // Ensure our client has the credentials required to generate a SAS
+            if (blobClient.CanGenerateSasUri)
+            {
+                // Create full, self-authenticating URI to the resource from the BlobClient
+                var sasUri = blobClient.GenerateSasUri(BlobSasPermissions.Read, DateTimeOffset.UtcNow.AddHours(1));
+
+                // Use newly made as SAS URI to download the blob
+                //await new BlobClient(sasUri).DownloadToAsync(new MemoryStream());
+                new BlobClient(sasUri).DownloadTo(memoryStream);
+                return sasUri.ToString();
+            }
+
+            //else
             blobClient.DownloadTo(memoryStream);
             memoryStream.Position = 0;
 
