@@ -10,9 +10,10 @@ namespace ReadBlobImagesApp
 {
     public interface IAzureHelper
     {
-        Task<Microsoft.Azure.Management.Fluent.IAzure> GetAzure();
+        Task<Microsoft.Azure.Management.Fluent.IAzure> GetAzureSubscription();
         Task<string> GetToken();
         Task CreateContainer(string containerName);
+        Task<string> GetConnectionStringFromKey1(int keyIndex);
     }
 
     public class AzureHelper : IAzureHelper
@@ -27,7 +28,7 @@ namespace ReadBlobImagesApp
             _httpClient = httpClient;
         }
 
-        public async Task<Microsoft.Azure.Management.Fluent.IAzure> GetAzure()
+        public async Task<Microsoft.Azure.Management.Fluent.IAzure> GetAzureSubscription()
         {
             var token = await GetToken();
 
@@ -80,6 +81,24 @@ namespace ReadBlobImagesApp
                 var x1 = await response2.Content.ReadAsStringAsync();
                 var x2 = response2.StatusCode.ToString();
             }
+        }
+
+        public async Task<string> GetConnectionStringFromKey1(int keyIndex)
+        {
+            var principalLogIn = new ServicePrincipalLoginInformation();
+            principalLogIn.ClientId = _configKeys.ClientId;
+            principalLogIn.ClientSecret = _configKeys.ClientSecret;
+
+            var azure = await GetAzureSubscription();
+            var keys = azure.StorageAccounts.GetByResourceGroup(_configKeys.ResourceGroupName, _configKeys.StorageAccountName).GetKeys();
+
+            var key1 = keys[keyIndex];
+            //var key2 = keys[1];
+
+            var connStr1 = "DefaultEndpointsProtocol=https;AccountName=" + _configKeys.StorageAccountName + ";AccountKey=" + key1.Value + ";EndpointSuffix=core.windows.net";
+            //var connStr2 = "DefaultEndpointsProtocol=https;AccountName=" + _storageAccountName + ";AccountKey=" + key2.Value + ";EndpointSuffix=core.windows.net";
+
+            return connStr1;
         }
     }
 

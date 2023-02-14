@@ -18,7 +18,7 @@ namespace ReadBlobImagesApp.Controllers
         private int? _segmentSize = null;
         private BlobServiceClient _blobServiceClient;
 
-        private readonly IAzureHelper _helper;
+        private readonly IAzureHelper _azureHelper;
         private readonly IConfigKeys _configKeys;
 
         private readonly string[] _excludeContainerNames = new[] { "azure-webjobs-hosts", "azure-webjobs-secrets" };
@@ -29,7 +29,7 @@ namespace ReadBlobImagesApp.Controllers
             IConfigKeys configKeys)
         {
             _logger = logger;
-            _helper = helper;
+            _azureHelper = helper;
             _configKeys = configKeys;
 
             _connectionString = ReadConnectionString();
@@ -105,33 +105,15 @@ namespace ReadBlobImagesApp.Controllers
         private string ReadConnectionString()
         {
             var connectionString = "";
-            var task = Task.Run(async () => { connectionString = await GetConnectionStringFromKey1(0); });
+            var task = Task.Run(async () => { connectionString = await _azureHelper.GetConnectionStringFromKey1(0); });
             task.Wait();
 
             return connectionString;
         }
 
-        private async Task<string> GetConnectionStringFromKey1(int keyIndex)
-        {
-            var principalLogIn = new ServicePrincipalLoginInformation();
-            principalLogIn.ClientId = _configKeys.ClientId;
-            principalLogIn.ClientSecret = _configKeys.ClientSecret;
-
-            var azure = await _helper.GetAzure();
-            var keys = azure.StorageAccounts.GetByResourceGroup(_configKeys.ResourceGroupName, _configKeys.StorageAccountName).GetKeys();
-
-            var key1 = keys[keyIndex];
-            //var key2 = keys[1];
-
-            var connStr1 = "DefaultEndpointsProtocol=https;AccountName=" + _configKeys.StorageAccountName + ";AccountKey=" + key1.Value + ";EndpointSuffix=core.windows.net";
-            //var connStr2 = "DefaultEndpointsProtocol=https;AccountName=" + _storageAccountName + ";AccountKey=" + key2.Value + ";EndpointSuffix=core.windows.net";
-
-            return connStr1;
-        }
-
         private List<string> GetImageUrls(BlobContainerClient blobContainerClient)
         {
-            List<string> urls = new List<string>();
+            var urls = new List<string>();
             try
             {
                 // Call the listing operation and return pages of the specified size.

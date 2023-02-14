@@ -5,17 +5,9 @@ namespace ReadBlobImagesApp.Controllers
 {
     public class UploadController : Controller
     {
-        private string _uploadUrl;
         private readonly HttpClient _httpClient;
 
         private readonly IConfiguration _configuration;
-
-        private string TenantId = "";
-        private string ClientId = "";
-        private string ClientSecret = "";
-        private string _subscriptionId = "";
-        private string _resourceGroupName = "";
-        private string _storageAccountName = "";
         private readonly IAzureHelper _azureHelper;
         private readonly IConfigKeys _configKeys;
 
@@ -77,7 +69,7 @@ namespace ReadBlobImagesApp.Controllers
                     multipartFormContent.Add(fileStreamContent3, name: "file", fileName: postedFile.FileName);
                 }
 
-                var response = await _httpClient.PostAsync(_uploadUrl, multipartFormContent);
+                var response = await _httpClient.PostAsync(_configKeys.UploadUrl, multipartFormContent);
                 var responseContent2 = await response.Content.ReadAsStringAsync();
 
                 @ViewBag.Message = responseContent2;
