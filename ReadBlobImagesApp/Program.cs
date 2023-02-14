@@ -13,6 +13,8 @@ builder.Services.AddHttpClient<UploadController>();
 builder.Services.AddScoped<IAzureHelper, AzureHelper>();
 builder.Services.AddScoped<IConfigKeys, ConfigKeys>();
 
+AddSession(builder.Services);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -50,6 +52,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+//enable session
+app.UseSession();
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -62,3 +67,13 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+
+void AddSession(IServiceCollection services)
+{
+    services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+    services.AddSession(options =>
+    {
+        options.IdleTimeout = TimeSpan.FromMinutes(10);//You can set Time   
+    });
+}

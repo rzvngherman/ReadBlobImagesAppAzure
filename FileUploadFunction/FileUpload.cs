@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Azure.Storage.Blobs;
 using System.Web.Http;
+using Microsoft.Extensions.Primitives;
 
 namespace FileUploadFunction
 {
@@ -37,7 +38,8 @@ namespace FileUploadFunction
                 return new BadRequestObjectResult(badResponseMessage);
             }
 
-            //if (req.ContentType.Contains("multipart/form-data") && req.Form.Files.Count > 0)
+            bool overwrite = GetOverwrite(req.Form["Overwrite"]);
+
             try
             {
                 foreach (var file in req.Form.Files)
@@ -49,15 +51,35 @@ namespace FileUploadFunction
                     //await blobClient.UploadBlobAsync("folder1/folder2/" + file.FileName, myBlob);
 
                     var blob = blobClient.GetBlobClient(fileName);
-                    await blob.UploadAsync(myBlob);
+                    await blob.UploadAsync(myBlob, overwrite);
                 }
+            }
+            catch(Azure.RequestFailedException requestFailedException)
+            {
+                var objectResult = new ObjectResult(requestFailedException.ErrorCode);
+                objectResult.StatusCode = requestFailedException.Status;
+                return objectResult;
             }
             catch (Exception ex)
             {
-                return new OkObjectResult(ex.ToString());
+                var objectResult = new ObjectResult(ex.ToString());
+                objectResult.StatusCode = StatusCodes.Status500InternalServerError;
+                return objectResult;
             }
 
             return new OkObjectResult("file(s) uploaded successfylly");
+        }
+
+        private static bool GetOverwrite(StringValues stringValues)
+        {
+            if(stringValues.Count == 0)
+            {
+                return false;
+            }
+
+            bool.TryParse(stringValues[0], out var overwrite);
+
+            return overwrite;
         }
     }
 }

@@ -10,6 +10,7 @@ namespace ReadBlobImagesApp.Controllers
         private readonly IConfiguration _configuration;
         private readonly IAzureHelper _azureHelper;
         private readonly IConfigKeys _configKeys;
+        private const string UPLOAD_VIEW_PATH = "~/Views/Upload/Index.cshtml";
 
         public UploadController(
             ILogger<UploadController> logger,
@@ -26,6 +27,8 @@ namespace ReadBlobImagesApp.Controllers
 
         public IActionResult Index()
         {
+            HttpContext.Session.SetString("StorageAccountName", _configKeys.StorageAccountName);
+            //TempData["StorageAccountName"] = _configKeys.StorageAccountName;
             return View();
         }
 
@@ -33,18 +36,19 @@ namespace ReadBlobImagesApp.Controllers
         public async Task<IActionResult> UploadFile(
             List<IFormFile> postedFiles,
             string containerName,
-            bool shouldCreateContainerIfNotExists)
+            bool shouldCreateContainerIfNotExists,
+            bool isOverwriting)
         {
             if (postedFiles == null || postedFiles.Count == 0)
             {
-                @ViewBag.Message = (new ArgumentNullException(nameof(postedFiles))).Message;
-                return View("~/Views/Upload/Index.cshtml");
+                @ViewBag.Message = ReadMessageByLang(1001, new ArgumentNullException(nameof(postedFiles)).Message);
+                return View(UPLOAD_VIEW_PATH);
             }
 
             if (string.IsNullOrEmpty(containerName))
             {
-                @ViewBag.Message = (new ArgumentNullException(nameof(containerName))).Message;
-                return View("~/Views/Upload/Index.cshtml");
+                @ViewBag.Message = ReadMessageByLang(1002, new ArgumentNullException(nameof(containerName)).Message);
+                return View(UPLOAD_VIEW_PATH);
             }
 
             if (shouldCreateContainerIfNotExists)
@@ -56,6 +60,7 @@ namespace ReadBlobImagesApp.Controllers
             {
                 //Add other fields
                 multipartFormContent.Add(new StringContent(containerName), "ContainerName");
+                multipartFormContent.Add(new StringContent(isOverwriting.ToString()), "Overwrite");
 
                 //Add files
                 foreach (var postedFile in postedFiles)
@@ -72,12 +77,40 @@ namespace ReadBlobImagesApp.Controllers
                 var response = await _httpClient.PostAsync(_configKeys.UploadUrl, multipartFormContent);
                 var responseContent2 = await response.Content.ReadAsStringAsync();
 
-                @ViewBag.Message = responseContent2;
-                return View("~/Views/Upload/Index.cshtml");
-                //return Ok(responseContent2);
+                if (!response.IsSuccessStatusCode)
+                {
+                    @ViewBag.Message = ReadMessageByLang((int)response.StatusCode, responseContent2);
+                    return View(UPLOAD_VIEW_PATH);
+                }
+
+                @ViewBag.Message = ReadMessageByLang(2001, responseContent2);
+
+                return View(UPLOAD_VIEW_PATH);
             }
         }
 
-        
+        private string ReadMessageByLang(int messageIndex, string message)
+        {
+            if (messageIndex == 1001)
+            {
+                //"Value cannot be null. (Parameter 'postedFiles')"
+                return "Va rog selectati fisierele pt upload";
+            }
+            if (messageIndex == 1002)
+            {
+                // "Value cannot be null. (Parameter 'containerName')"
+                return "Va rog introduceti 'container name'";
+            }
+
+            
+            if (messageIndex == 409 && message.Equals("BlobAlreadyExists"))
+            {
+                //409
+                //"BlobAlreadyExists"
+                return "Fisierul(le) incarcate deja exista";
+            }
+
+            return message;
+        }
     }
 }
