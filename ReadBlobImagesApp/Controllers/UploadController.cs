@@ -1,21 +1,35 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
-using System.IO;
-using System.Net.Http;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
-using System.Web;
 
 namespace ReadBlobImagesApp.Controllers
 {
     public class UploadController : Controller
     {
-        private readonly string _uploadUrl;
+        private string _uploadUrl;
+        private readonly HttpClient _httpClient;
 
-        public UploadController(ILogger<UploadController> logger, IConfiguration configuration)
+        private readonly IConfiguration _configuration;
+
+        private string TenantId = "";
+        private string ClientId = "";
+        private string ClientSecret = "";
+        private string _subscriptionId = "";
+        private string _resourceGroupName = "";
+        private string _storageAccountName = "";
+        private readonly IAzureHelper _azureHelper;
+        private readonly IConfigKeys _configKeys;
+
+        public UploadController(
+            ILogger<UploadController> logger,
+            IConfiguration configuration,
+            HttpClient httpClient,
+            IAzureHelper helper,
+            IConfigKeys configKeys)
         {
-            _uploadUrl = configuration.GetValue<string>("ConfigKeys:UploadFileUrl");
+            _configuration = configuration;
+            _configKeys = configKeys;
+            _httpClient = httpClient;
+            _azureHelper = helper;
         }
 
         public IActionResult Index()
@@ -24,14 +38,27 @@ namespace ReadBlobImagesApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadFile(List<IFormFile> postedFiles, string containerName)
+        public async Task<IActionResult> UploadFile(
+            List<IFormFile> postedFiles,
+            string containerName,
+            bool shouldCreateContainerIfNotExists)
         {
-            if(postedFiles == null)
+            if (postedFiles == null || postedFiles.Count == 0)
             {
-                throw new ArgumentNullException(nameof(postedFiles));
+                @ViewBag.Message = (new ArgumentNullException(nameof(postedFiles))).Message;
+                return View("~/Views/Upload/Index.cshtml");
             }
 
-            var client = GetClient();
+            if (string.IsNullOrEmpty(containerName))
+            {
+                @ViewBag.Message = (new ArgumentNullException(nameof(containerName))).Message;
+                return View("~/Views/Upload/Index.cshtml");
+            }
+
+            if (shouldCreateContainerIfNotExists)
+            {
+                await _azureHelper.CreateContainer(containerName);
+            }
 
             using (var multipartFormContent = new MultipartFormDataContent())
             {
@@ -41,25 +68,24 @@ namespace ReadBlobImagesApp.Controllers
                 //Add files
                 foreach (var postedFile in postedFiles)
                 {
-                    //add file 01
                     using var memoryStream3 = new MemoryStream();
                     await postedFile.CopyToAsync(memoryStream3);
+
                     //Add the file
                     var fileStreamContent3 = new ByteArrayContent(memoryStream3.ToArray());
                     fileStreamContent3.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
                     multipartFormContent.Add(fileStreamContent3, name: "file", fileName: postedFile.FileName);
                 }
 
-                var response = await client.PostAsync(_uploadUrl, multipartFormContent);
+                var response = await _httpClient.PostAsync(_uploadUrl, multipartFormContent);
                 var responseContent2 = await response.Content.ReadAsStringAsync();
-                return Ok(responseContent2);
+
+                @ViewBag.Message = responseContent2;
+                return View("~/Views/Upload/Index.cshtml");
+                //return Ok(responseContent2);
             }
         }
 
-        private HttpClient GetClient()
-        {
-            var client = new HttpClient();
-            return client;
-        }
+        
     }
 }

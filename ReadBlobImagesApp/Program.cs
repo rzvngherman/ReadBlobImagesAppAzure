@@ -1,10 +1,17 @@
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Azure.Management.Storage.Fluent.Models;
+using ReadBlobImagesApp;
+using ReadBlobImagesApp.Controllers;
 using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddHttpClient<UploadController>();
+builder.Services.AddScoped<IAzureHelper, AzureHelper>();
+builder.Services.AddScoped<IConfigKeys, ConfigKeys>();
 
 var app = builder.Build();
 

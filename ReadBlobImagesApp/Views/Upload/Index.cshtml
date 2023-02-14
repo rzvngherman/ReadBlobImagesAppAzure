@@ -7,10 +7,12 @@
 @using (Html.BeginForm("UploadFile", "Upload", FormMethod.Post, new { enctype = "multipart/form-data" }))
 {
         <div>
-        <input type="file" name="postedFiles" multiple />
-        <br />Container name @Html.TextBox("containerName", "")
-        <br />
-        <input type="submit" value="Upload" />
-        @ViewBag.Message
+            <input type="file" name="postedFiles" multiple />
+            <br />Container name @Html.TextBox("containerName", "")
+            Create container if not exists @Html.CheckBox("shouldCreateContainerIfNotExists")
+            <br />
+            <input type="submit" value="Upload" />
+            <br />
+            @ViewBag.Message
         </div>
 }

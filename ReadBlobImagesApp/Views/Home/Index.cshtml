@@ -1,59 +1,12 @@
-﻿@using ReadBlobImagesApp.Controllers;
-@{
-    ViewData["Title"] = "Pagina de inceput";
+﻿@{
+    ViewData["Title"] = "Bun venit";
 }
+<h1>@ViewData["Title"]</h1>
 
-@model List<HomeIndexResponseModel>
+<p>
+    Selecteaza <a asp-controller="GetImages" asp-action="Index">'Vezi poze'</a> sau
+    <a asp-controller="Upload" asp-action="Index">'Incarca poze'</a>
+</p>
 
-<style>
-    .modal-dialog {
-        max-width: 90% !important;
-    }
 
-    .img-link
-    {
-        cursor: pointer;
-    }
 
-</style>
-
-<div class="text-center">
-    <h1 class="display-4">Albume foto</h1>
-</div>
-
-@{
-int idy = 0;
-foreach (var responseModel in Model)
-{
-<div class="container">
-            <h1 class="display-4">
-                <a class="btn btn-primary"
-                    data-bs-toggle="collapse"
-                    href="@("#collapse-photo" + @idy)">@responseModel.ContainerName</a>
-                @Html.ActionLink("Salveaza zip", "CreateZip", "Home", new { ContainerName=responseModel.ContainerName }, new {@class = "fs-3"})
-            </h1>
-            <div class="row row-cols-3 collapse" id="@("collapse-photo" + @idy)">
-                @{
-                    idy += 1;
-                    int idx = 0;
-                    foreach (var url in responseModel.Urls)
-                    {
-                        idx += 1;
-                        <div class="col">
-                            <img class="img-link" src="@url" width="100%" data-bs-toggle="modal" data-bs-target="@("#image" + @idy + @idx)" />
-                        </div>
-
-                        <!-- modal-->
-                        <div class="modal fade" id="@("image" + @idy + @idx)" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <img src="@url"/>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-    </div>
-</div>
-    }
-}
