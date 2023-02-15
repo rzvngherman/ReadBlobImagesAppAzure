@@ -10,6 +10,8 @@ namespace ReadBlobImagesApp.Controllers
         private readonly IConfiguration _configuration;
         private readonly IAzureHelper _azureHelper;
         private readonly IConfigKeys _configKeys;
+        private readonly IMessageHelper _messageHelper;
+
         private const string UPLOAD_VIEW_PATH = "~/Views/Upload/Index.cshtml";
 
         public UploadController(
@@ -17,12 +19,14 @@ namespace ReadBlobImagesApp.Controllers
             IConfiguration configuration,
             HttpClient httpClient,
             IAzureHelper helper,
-            IConfigKeys configKeys)
+            IConfigKeys configKeys,
+            IMessageHelper messageHelper)
         {
             _configuration = configuration;
             _configKeys = configKeys;
             _httpClient = httpClient;
             _azureHelper = helper;
+            _messageHelper = messageHelper;
         }
 
         public IActionResult Index()
@@ -41,13 +45,14 @@ namespace ReadBlobImagesApp.Controllers
         {
             if (postedFiles == null || postedFiles.Count == 0)
             {
-                @ViewBag.Message = ReadMessageByLang(1001, new ArgumentNullException(nameof(postedFiles)).Message);
+                @ViewBag.Message = _messageHelper.GetByIndex(1001);
                 return View(UPLOAD_VIEW_PATH);
+                //return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
             }
 
             if (string.IsNullOrEmpty(containerName))
             {
-                @ViewBag.Message = ReadMessageByLang(1002, new ArgumentNullException(nameof(containerName)).Message);
+                @ViewBag.Message = _messageHelper.GetByIndex(1002);
                 return View(UPLOAD_VIEW_PATH);
             }
 
@@ -75,40 +80,27 @@ namespace ReadBlobImagesApp.Controllers
                 }
 
                 var response = await _httpClient.PostAsync(_configKeys.UploadUrl, multipartFormContent);
-                var responseContent2 = await response.Content.ReadAsStringAsync();
+                var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    @ViewBag.Message = ReadMessageByLang((int)response.StatusCode, responseContent2);
+                    @ViewBag.Message = ReadMessageFromUploadCalls(responseContent, (int)response.StatusCode);
                     return View(UPLOAD_VIEW_PATH);
                 }
 
-                @ViewBag.Message = ReadMessageByLang(2001, responseContent2);
-
+                @ViewBag.Message = responseContent;
                 return View(UPLOAD_VIEW_PATH);
             }
         }
 
-        private string ReadMessageByLang(int messageIndex, string message)
+        private string ReadMessageFromUploadCalls(string message, int messageIndex)
         {
-            if (messageIndex == 1001)
+            if (messageIndex == StatusCodes.Status409Conflict && message.Equals("BlobAlreadyExists"))
             {
-                //"Value cannot be null. (Parameter 'postedFiles')"
-                return "Va rog selectati fisierele pt upload";
-            }
-            if (messageIndex == 1002)
-            {
-                // "Value cannot be null. (Parameter 'containerName')"
-                return "Va rog introduceti 'container name'";
+                return _messageHelper.GetByIndex(4091);
             }
 
-            
-            if (messageIndex == 409 && message.Equals("BlobAlreadyExists"))
-            {
-                //409
-                //"BlobAlreadyExists"
-                return "Fisierul(le) incarcate deja exista";
-            }
+            //TODO add more errors from post url data
 
             return message;
         }

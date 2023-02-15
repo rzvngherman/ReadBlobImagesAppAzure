@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Azure.Management.Storage.Fluent.Models;
 using ReadBlobImagesApp;
 using ReadBlobImagesApp.Controllers;
 using static System.Net.Mime.MediaTypeNames;
@@ -12,6 +11,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<UploadController>();
 builder.Services.AddScoped<IAzureHelper, AzureHelper>();
 builder.Services.AddScoped<IConfigKeys, ConfigKeys>();
+
+builder.Services.AddScoped<IMessageHelper, MessageHelper>();
+//AddTranslationService(builder);
 
 AddSession(builder.Services);
 
@@ -77,3 +79,11 @@ void AddSession(IServiceCollection services)
         options.IdleTimeout = TimeSpan.FromMinutes(10);//You can set Time   
     });
 }
+
+//void AddTranslationService(WebApplicationBuilder builder)
+//{
+//    var configLangCode = builder.Configuration.GetValue<string>("ConfigKeys:LanguageCode");
+//    Enum.TryParse(configLangCode, out LangCode langCode);
+
+//    builder.Services.AddSingleton<IMessageHelper>(s => new TranslationHelper(langCode));
+//}
