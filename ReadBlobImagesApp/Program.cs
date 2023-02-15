@@ -1,89 +1,17 @@
-using Microsoft.AspNetCore.Diagnostics;
-using ReadBlobImagesApp;
-using ReadBlobImagesApp.Controllers;
-using static System.Net.Mime.MediaTypeNames;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllersWithViews();
-
-builder.Services.AddHttpClient<UploadController>();
-builder.Services.AddScoped<IAzureHelper, AzureHelper>();
-builder.Services.AddScoped<IConfigKeys, ConfigKeys>();
-
-builder.Services.AddScoped<IMessageHelper, MessageHelper>();
-//AddTranslationService(builder);
-
-AddSession(builder.Services);
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+namespace ReadBlobImagesApp
 {
-    //app.UseExceptionHandler("/Home/Error");
-    app.UseExceptionHandler(exceptionHandlerApp =>
+    public class Program
     {
-        exceptionHandlerApp.Run(async context =>
+        public static void Main(string[] args)
         {
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            //BuildWebHost(args).Run();
+            var builder = WebApplication.CreateBuilder(args);
 
-            // using static System.Net.Mime.MediaTypeNames;
-            context.Response.ContentType = Text.Plain;
+            var startup = new Startup(builder.Configuration);
+            startup.ConfigureServices(builder.Services);
 
-            await context.Response.WriteAsync("An exception was thrown.");
-
-            var exceptionHandlerPathFeature =
-                context.Features.Get<IExceptionHandlerPathFeature>();
-
-            if (exceptionHandlerPathFeature?.Error is FileNotFoundException)
-            {
-                await context.Response.WriteAsync(" The file was not found.");
-            }
-
-            if (exceptionHandlerPathFeature?.Path == "/")
-            {
-                await context.Response.WriteAsync(" Page: Home.");
-            }
-
-            await context.Response.WriteAsync(" Error: " + exceptionHandlerPathFeature?.Error.Message);
-        });
-    });
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+            var app = builder.Build();
+            startup.Configure(app, builder.Environment);
+        }
+    }
 }
-
-//enable session
-app.UseSession();
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthorization();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.Run();
-
-
-void AddSession(IServiceCollection services)
-{
-    services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-    services.AddSession(options =>
-    {
-        options.IdleTimeout = TimeSpan.FromMinutes(10);//You can set Time   
-    });
-}
-
-//void AddTranslationService(WebApplicationBuilder builder)
-//{
-//    var configLangCode = builder.Configuration.GetValue<string>("ConfigKeys:LanguageCode");
-//    Enum.TryParse(configLangCode, out LangCode langCode);
-
-//    builder.Services.AddSingleton<IMessageHelper>(s => new TranslationHelper(langCode));
-//}

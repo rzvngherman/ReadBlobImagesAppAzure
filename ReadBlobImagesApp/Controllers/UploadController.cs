@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using System.Net.Http.Headers;
 
 namespace ReadBlobImagesApp.Controllers
@@ -11,6 +12,8 @@ namespace ReadBlobImagesApp.Controllers
         private readonly IAzureHelper _azureHelper;
         private readonly IConfigKeys _configKeys;
         private readonly IMessageHelper _messageHelper;
+        private readonly IMemoryCache _memoryCache;
+        private readonly string _getImagesCacheKey;
 
         private const string UPLOAD_VIEW_PATH = "~/Views/Upload/Index.cshtml";
 
@@ -20,13 +23,16 @@ namespace ReadBlobImagesApp.Controllers
             HttpClient httpClient,
             IAzureHelper helper,
             IConfigKeys configKeys,
-            IMessageHelper messageHelper)
+            IMessageHelper messageHelper,
+            IMemoryCache memoryCache)
         {
             _configuration = configuration;
             _configKeys = configKeys;
             _httpClient = httpClient;
             _azureHelper = helper;
             _messageHelper = messageHelper;
+            _memoryCache = memoryCache;
+            _getImagesCacheKey = CacheKeys.HomeIndexResponseModel;
         }
 
         public IActionResult Index()
@@ -88,9 +94,19 @@ namespace ReadBlobImagesApp.Controllers
                     return View(UPLOAD_VIEW_PATH);
                 }
 
+                //success
                 @ViewBag.Message = responseContent;
+                
+                //reset cache
+                ResetGetImagesCache();
+
                 return View(UPLOAD_VIEW_PATH);
             }
+        }
+
+        private void ResetGetImagesCache()
+        {
+            _memoryCache.Remove(_getImagesCacheKey);
         }
 
         private string ReadMessageFromUploadCalls(string message, int messageIndex)

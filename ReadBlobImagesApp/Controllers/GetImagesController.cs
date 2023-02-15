@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 using ReadBlobImagesApp.Models;
 using System.Diagnostics;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ReadBlobImagesApp.Controllers
 {
@@ -22,11 +23,15 @@ namespace ReadBlobImagesApp.Controllers
         private readonly IConfigKeys _configKeys;
 
         private readonly string[] _excludeContainerNames = new[] { "azure-webjobs-hosts", "azure-webjobs-secrets" };
+        private readonly IMemoryCache _memoryCache;
+
+        private readonly string _getImagesCacheKey;
 
         public GetImagesController(
             ILogger<GetImagesController> logger,
             IAzureHelper helper,
-            IConfigKeys configKeys)
+            IConfigKeys configKeys,
+            IMemoryCache memoryCache)
         {
             _logger = logger;
             _azureHelper = helper;
@@ -34,29 +39,23 @@ namespace ReadBlobImagesApp.Controllers
 
             _connectionString = ReadConnectionString();
             _blobServiceClient = new BlobServiceClient(_connectionString);
+            _memoryCache = memoryCache;
+            _getImagesCacheKey = CacheKeys.HomeIndexResponseModel;
         }
 
         #region IActionResult
         public IActionResult Index()
         {
-            var containerItems = _blobServiceClient
-                                    .GetBlobContainers()
-                                    .Where(b => !_excludeContainerNames.Contains(b.Name));
-
-            var contents = new List<HomeIndexResponseModel>();
-
-            foreach (var containerItem in containerItems)
+            var ts = GetTimeSpanForGetImages();
+            
+            if (!_memoryCache.TryGetValue(_getImagesCacheKey, out List<HomeIndexResponseModel> contents))
             {
-                var blobContainerClient = new BlobContainerClient(_connectionString, containerItem.Name);
+                contents = ReadFromAzure();
 
-                var urls = GetImageUrls(blobContainerClient);
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(ts);
 
-                var content = new HomeIndexResponseModel
-                {
-                    ContainerName = containerItem.Name,
-                    Urls = urls,
-                };
-                contents.Add(content);
+                _memoryCache.Set(_getImagesCacheKey, contents, cacheEntryOptions);
             }
 
             return View(contents);
@@ -159,6 +158,36 @@ namespace ReadBlobImagesApp.Controllers
             memoryStream.Position = 0;
 
             return blobClient.Uri.ToString();
+        }
+
+        private List<HomeIndexResponseModel> ReadFromAzure()
+        {
+            var containerItems = _blobServiceClient
+                                    .GetBlobContainers()
+                                    .Where(b => !_excludeContainerNames.Contains(b.Name));
+
+            var contents = new List<HomeIndexResponseModel>();
+
+            foreach (var containerItem in containerItems)
+            {
+                var blobContainerClient = new BlobContainerClient(_connectionString, containerItem.Name);
+
+                var urls = GetImageUrls(blobContainerClient);
+
+                var content = new HomeIndexResponseModel
+                {
+                    ContainerName = containerItem.Name,
+                    Urls = urls,
+                };
+                contents.Add(content);
+            }
+
+            return contents;
+        }
+
+        private TimeSpan GetTimeSpanForGetImages()
+        {
+            return TimeSpan.FromMinutes(_configKeys.CacheGetImagesMinutes);
         }
     }
 }

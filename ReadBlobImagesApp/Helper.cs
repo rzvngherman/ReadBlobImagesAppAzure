@@ -42,7 +42,9 @@ namespace ReadBlobImagesApp
             var azure = Microsoft.Azure.Management.Fluent.Azure
                             .Configure()
                             .Authenticate(credentials)
-                            .WithSubscription(_configKeys.SubscriptionId);
+                            .WithSubscription(_configKeys.SubscriptionId)
+                            //.WithClientClaims
+                            ;
 
             return azure;
         }
@@ -112,6 +114,7 @@ namespace ReadBlobImagesApp
         string StorageAccountName { get; }
         public string UploadUrl { get; }
 
+        public int CacheGetImagesMinutes { get; }
     }
 
     public class ConfigKeys : IConfigKeys
@@ -124,6 +127,7 @@ namespace ReadBlobImagesApp
         public string ResourceGroupName { get; }
         public string StorageAccountName { get; }
         public string UploadUrl { get; }
+        public int CacheGetImagesMinutes { get; }
 
         public ConfigKeys(IConfiguration configuration)
         {
@@ -173,7 +177,18 @@ namespace ReadBlobImagesApp
             {
                 throw new ArgumentNullException(nameof(UploadUrl));
             }
+
+            CacheGetImagesMinutes = configuration.GetValue<int>("ConfigKeys:CacheGetImagesMinutes");
+            if (CacheGetImagesMinutes == 0)
+            {
+                CacheGetImagesMinutes = 480; //8 ore
+            }
         }
 
+    }
+
+    public class CacheKeys
+    {
+        public static string HomeIndexResponseModel = "HomeIndexResponseModel";
     }
 }
