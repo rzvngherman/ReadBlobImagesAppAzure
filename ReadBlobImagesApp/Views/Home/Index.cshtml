@@ -4,6 +4,26 @@
 <h1>@ViewData["Title"]</h1>
 
 <p>
+    User.Identity.Name: @User.Identity.Name
+    <br />
+    email: @User.Claims.FirstOrDefault(c => c.Type == "email")?.Value
+    <br />
+    family_name: @User.Claims.FirstOrDefault(c => c.Type == "family_name")?.Value
+    <br />
+    given_name: @User.Claims.FirstOrDefault(c => c.Type == "given_name")?.Value
+    <br />
+    preferred_username: @User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value
+    <br />
+    Claims.Count: @User.Claims.Count();
+    <br />
+
+    @foreach (var claim in @User.Claims)
+    {
+        <br />
+        @(claim.Type + "###" + claim.Value)
+    }
+    <br />
+
     Selecteaza <a asp-controller="GetImages" asp-action="Index">'Vezi poze'</a> sau
     <a asp-controller="Upload" asp-action="Index">'Incarca poze'</a>
 </p>

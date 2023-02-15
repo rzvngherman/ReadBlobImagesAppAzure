@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Identity.Web;
 using ReadBlobImagesApp.Controllers;
@@ -17,8 +18,23 @@ namespace ReadBlobImagesApp
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                options.CheckConsentNeeded = context => true;
+                options.MinimumSameSitePolicy = SameSiteMode.Unspecified;
+                // Handling SameSite cookie according to https://docs.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-3.1
+                options.HandleSameSiteCookieCompatibility();
+            });
+
+            // Configuration to sign-in users with Azure AD B2C
+            services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAdB2C");
+
+            //Configuring appsettings section AzureAdB2C, into IOptions
+            services.AddOptions();
+            services.Configure<OpenIdConnectOptions>(Configuration.GetSection("AzureAdB2C"));
+
             AddSession(services);
-            //AddAuthentication(services);
 
             services.AddHttpClient<UploadController>();
             services.AddScoped<IAzureHelper, AzureHelper>();
@@ -81,8 +97,8 @@ namespace ReadBlobImagesApp
 
             app.UseRouting();
 
-            //app.UseAuthentication();
-            //app.UseAuthorization();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllerRoute(
                 name: "default",
@@ -99,25 +115,6 @@ namespace ReadBlobImagesApp
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(10);//You can set Time   
             });
-        }
-
-        //void AddTranslationService(WebApplicationBuilder builder)
-        //{
-        //    var configLangCode = builder.Configuration.GetValue<string>("ConfigKeys:LanguageCode");
-        //    Enum.TryParse(configLangCode, out LangCode langCode);
-
-        //    builder.Services.AddSingleton<IMessageHelper>(s => new TranslationHelper(langCode));
-        //}
-
-        void AddAuthentication(IServiceCollection services)
-        {
-            services
-                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddMicrosoftIdentityWebApi(Configuration, "AzureAd");
-
-            //services
-            //        .AddAuthentication(AzureADDefaults.AuthenticationScheme)
-            //        .AddAzureAD(options => Configuration.Bind("AzureAd", options));
         }
     }
 }
